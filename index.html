@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEF1F6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Semana">
+<title>Semana</title>
+<style>
+  :root { --bg:#EEF1F6; --card:#FFFFFF; --ink:#0F1B3D; --mute:#6B7590; --line:#D9DEE8; --done:#2743F0; --min:#C77800; --fijo:#98A2B3; --warn:#B42318; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; -webkit-font-smoothing:antialiased; }
+  button, input { font:inherit; color:inherit; }
+  button { cursor:pointer; border:none; background:transparent; text-align:left; }
+  button:focus-visible, input:focus-visible { outline:3px solid var(--done); outline-offset:2px; }
+  .wrap { max-width:480px; margin:0 auto; padding:16px 16px 40px; padding-top:calc(16px + env(safe-area-inset-top)); }
+  .tabs { display:flex; gap:6px; background:#E1E6EF; border-radius:12px; padding:4px; margin-bottom:16px; }
+  .tabs button { flex:1; border-radius:9px; padding:10px 0; font-weight:700; font-size:15px; text-align:center; color:var(--mute); }
+  .tabs button.on { background:var(--card); color:var(--ink); box-shadow:0 1px 2px rgba(15,27,61,.12); }
+  .streaks { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+  .streak { background:var(--card); border-radius:12px; padding:10px 8px; text-align:center; }
+  .streak .n { font-size:22px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .streak .n.zero { color:var(--fijo); }
+  .streak .n small { font-size:13px; margin-left:2px; }
+  .streak .l { font-size:12px; font-weight:600; margin-top:5px; color:var(--mute); }
+  .streak .r { font-size:10px; margin-top:2px; height:12px; color:var(--warn); font-weight:700; }
+  .days { display:flex; justify-content:space-between; margin-bottom:16px; }
+  .days button { width:44px; height:56px; border-radius:12px; background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-weight:700; font-size:15px; }
+  .days button.past { color:var(--mute); }
+  .days button.on { background:var(--ink); color:#fff; }
+  .days button small { font-size:11px; font-weight:500; opacity:.8; }
+  h1 { margin:0; font-size:26px; font-weight:800; letter-spacing:-.5px; }
+  h1 span { color:var(--mute); font-weight:500; font-size:16px; margin-left:8px; }
+  h2 { font-size:17px; font-weight:800; margin:26px 0 10px; letter-spacing:-.3px; }
+  .head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+  .count { font-size:14px; color:var(--mute); font-variant-numeric:tabular-nums; }
+  .card { background:var(--card); border-radius:16px; overflow:hidden; }
+  .card.pad { padding:16px; font-size:14px; line-height:1.55; }
+  .card.pad b { display:block; margin-bottom:6px; }
+  .row { width:100%; display:grid; grid-template-columns:54px 1fr 28px; align-items:center; gap:12px; padding:14px 16px; border-top:1px solid var(--line); }
+  .row:first-child { border-top:none; }
+  .row.fijo { cursor:default; }
+  .row .t { font-size:17px; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
+  .row .n { display:block; font-size:15px; font-weight:600; }
+  .row .d { display:block; font-size:13px; color:var(--mute); margin-top:2px; }
+  .row.done .t, .row.done .n { color:var(--done); } .row.done .n { text-decoration:line-through; text-decoration-thickness:2px; }
+  .row.min .t, .row.min .n { color:var(--min); }
+  .row.fijo .t, .row.fijo .n { color:var(--fijo); }
+  .chk { width:24px; height:24px; border-radius:999px; justify-self:end; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; font-weight:800; }
+  .row.done .chk { background:var(--done); border-color:var(--done); }
+  .row.min .chk { background:var(--min); border-color:var(--min); }
+  .row.fijo .chk { border:none; }
+  .row.one { grid-template-columns:1fr 28px; } .row.one .n { line-height:1.4; }
+  .hint { font-size:13px; color:var(--mute); margin:10px 4px 0; line-height:1.5; }
+  input.note { width:100%; border:none; background:transparent; padding:14px 16px; font-size:15px; }
+  input.note::placeholder { color:var(--fijo); }
+  .metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .metric { background:var(--card); border-radius:16px; padding:18px 16px 14px; }
+  .metric .big { font-size:44px; font-weight:800; line-height:1; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; }
+  .metric .big.ok { color:var(--done); }
+  .metric .big span { font-size:20px; color:var(--mute); font-weight:600; letter-spacing:0; }
+  .metric .l { font-size:14px; font-weight:600; margin-top:10px; line-height:1.3; }
+  .metric .m { font-size:12px; color:var(--mute); margin-top:3px; }
+  .sub { margin:0 0 14px; color:var(--mute); font-size:14px; }
+  .noterow { display:grid; grid-template-columns:30px 1fr; gap:10px; padding:12px 16px; font-size:14px; border-top:1px solid var(--line); line-height:1.4; }
+  .noterow:first-child { border-top:none; } .noterow b { color:var(--mute); }
+  .empty { padding:14px 16px; font-size:14px; color:var(--mute); }
+  .tbl { display:grid; grid-template-columns:1.4fr repeat(4,1fr); padding:12px 16px; font-size:15px; font-weight:600; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  .tbl.hd { padding:10px 16px; font-size:12px; color:var(--mute); font-weight:400; }
+  .tbl .w { font-weight:500; color:var(--mute); } .tbl .ok { color:var(--done); }
+  .err { font-size:13px; color:var(--warn); margin-top:16px; }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// =====================================================================
+// PLAN — edita aquí si cambia un horario. Horas en formato de reloj.
+// type "fijo": solo informa, no se marca.  metric: hábito que alimenta.
+// min: true si tiene versión mínima (segundo toque).
+// =====================================================================
+const PLAN = {
+  1: [ // Lunes
+    { id:"tarea1", t:"3:30",  n:"Tarea, parte 1", d:"1 h" },
+    { id:"clase",  t:"4:35",  n:"Clase de alemán", d:"hasta 7:20", type:"fijo" },
+    { id:"aleman", t:"7:45",  n:"Alemán: repasar la clase de hoy", d:"30 min", metric:"aleman", min:true },
+    { id:"tarea2", t:"8:15",  n:"Tarea, parte 2", d:"45 min" },
+    { id:"prep",   t:"9:30",  n:"Teléfono fuera del cuarto, mochila lista", d:"10 min" },
+    { id:"cama",   t:"9:40",  n:"En cama", d:"", metric:"cama" },
+  ],
+  2: [ // Martes
+    { id:"tarea1", t:"5:30",  n:"Tarea", d:"2 h" },
+    { id:"aleman", t:"7:30",  n:"Alemán por tu cuenta", d:"1 h", metric:"aleman", min:true },
+    { id:"prep",   t:"9:30",  n:"Teléfono fuera del cuarto, mochila lista", d:"10 min" },
+    { id:"cama",   t:"9:40",  n:"En cama", d:"", metric:"cama" },
+  ],
+  5: [ // Viernes
+    { id:"gym",    t:"3:30",  n:"Gym", d:"1 h + traslado", metric:"gym", min:true },
+    { id:"tarea1", t:"5:00",  n:"Tarea (ligera)", d:"1.5 h" },
+    { id:"aleman", t:"6:30",  n:"Alemán por tu cuenta", d:"1 h", metric:"aleman", min:true },
+    { id:"libre",  t:"7:30",  n:"Libre hasta las 10", d:"", type:"fijo" },
+    { id:"cama",   t:"10:00", n:"En cama", d:"", metric:"cama" },
+  ],
+  6: [ // Sábado
+    { id:"arriba", t:"7:00",  n:"Levantarse", d:"" },
+    { id:"gym",    t:"7:30",  n:"Gym", d:"1–1.5 h", metric:"gym", min:true },
+    { id:"juego",  t:"9:30",  n:"Videojuego (teléfono en otro cuarto)", d:"4 h", metric:"juego", min:true },
+    { id:"tarea1", t:"2:00",  n:"Tarea", d:"2 h" },
+    { id:"aleman", t:"4:30",  n:"Alemán por tu cuenta", d:"1 h", metric:"aleman", min:true },
+    { id:"libre",  t:"5:30",  n:"Libre", d:"", type:"fijo" },
+    { id:"cama",   t:"11:00", n:"En cama", d:"", metric:"cama" },
+  ],
+  0: [ // Domingo
+    { id:"arriba",   t:"8:00",  n:"Levantarse y quehacer", d:"" },
+    { id:"iglesia",  t:"10:20", n:"Iglesia", d:"hasta 1:50", type:"fijo" },
+    { id:"tarea1",   t:"2:00",  n:"Tarea", d:"2 h" },
+    { id:"aleman",   t:"4:30",  n:"Alemán por tu cuenta", d:"1 h", metric:"aleman", min:true },
+    { id:"revision", t:"5:30",  n:"Revisar la semana (pestaña Semana)", d:"30 min" },
+    { id:"prep",     t:"9:30",  n:"Teléfono fuera del cuarto, mochila lista", d:"10 min" },
+    { id:"cama",     t:"9:40",  n:"En cama", d:"", metric:"cama" },
+  ],
+};
+PLAN[3] = PLAN[1]; // Miércoles = Lunes
+PLAN[4] = PLAN[2]; // Jueves = Martes
+
+const ONEOFFS = [
+  { id:"escuela", n:"Preguntar en la escuela si permiten faltas justificadas por trabajo" },
+  { id:"book",    n:"Pedir a la agencia qué fotos necesita el book y agendar con un amigo un sábado en la tarde" },
+];
+
+const METRICS = [
+  { key:"aleman", label:"Alemán", long:"Días con alemán",         meta:6, of:7 },
+  { key:"gym",    label:"Gym",    long:"Sesiones de gym",         meta:2, of:2 },
+  { key:"juego",  label:"Juego",  long:"Sábado de videojuego",    meta:1, of:1 },
+  { key:"cama",   label:"Cama",   long:"Noches en cama a tiempo", meta:7, of:7 },
+];
+
+// ---------------- Utilidades ----------------
+const DAY_SHORT = ["D","L","M","X","J","V","S"];
+const DAY_LONG  = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MONTHS    = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const pad = n => String(n).padStart(2,"0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const mondayOf = d => { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay()+6)%7)); x.setHours(0,0,0,0); return x; };
+const weekDates = mon => Array.from({length:7}, (_,i) => iso(addDays(mon,i)));
+const blockFor = (dateStr, metric) => (PLAN[parse(dateStr).getDay()] || []).find(b => b.metric === metric);
+const isDone = st => st === "done" || st === "min";
+const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+// ---------------- Persistencia (localStorage, con try/catch) ----------------
+const KEY = "habitos:plan-v1";
+let log = { days:{}, oneoffs:{} };
+let saveErr = false;
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const p = JSON.parse(raw); log = { days:p.days||{}, oneoffs:p.oneoffs||{} }; } }
+  catch (e) { /* nada guardado o JSON roto: se empieza vacío */ }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(log)); saveErr = false; }
+  catch (e) { saveErr = true; }
+}
+
+// ---------------- Racha: un fallo no rompe, dos seguidos sí ----------------
+function streakFor(metric, today) {
+  const todayStr = iso(today);
+  let streak = 0, misses = 0, lastWasMiss = false, first = true;
+  for (let k = 0; k < 180; k++) {
+    const dStr = iso(addDays(today, -k));
+    const b = blockFor(dStr, metric);
+    if (!b) continue;
+    const st = (log.days[dStr] || {})[b.id];
+    if (dStr === todayStr && !isDone(st)) continue;   // hoy pendiente no cuenta
+    if (isDone(st)) { streak++; misses = 0; }
+    else { misses++; if (first) lastWasMiss = true; if (misses >= 2) break; }
+    first = false;
+  }
+  return { streak, atRisk: lastWasMiss && streak > 0 };
+}
+
+function metricsFor(dates) {
+  const out = {};
+  METRICS.forEach(m => {
+    out[m.key] = dates.reduce((n,d) => { const b = blockFor(d, m.key); return b && isDone((log.days[d]||{})[b.id]) ? n+1 : n; }, 0);
+  });
+  return out;
+}
+
+// ---------------- Estado de UI ----------------
+const today = new Date(); today.setHours(0,0,0,0);
+let tab = "hoy";
+let sel = iso(today);
+
+function setDay(patch) {
+  const d = { ...(log.days[sel] || {}), ...patch };
+  Object.keys(d).forEach(k => { if (d[k] === null || d[k] === "") delete d[k]; });
+  if (Object.keys(d).length) log.days[sel] = d; else delete log.days[sel];
+  save(); render();
+}
+function cycle(b) {
+  if (b.type === "fijo") return;
+  const cur = (log.days[sel] || {})[b.id] || null;
+  const next = b.min ? (cur === null ? "done" : cur === "done" ? "min" : null) : (cur === null ? "done" : null);
+  setDay({ [b.id]: next });
+}
+function saveNote(v) {
+  v = v.trim().slice(0,120);
+  if (v !== ((log.days[sel]||{}).nota || "")) setDay({ nota: v }); 
+}
+function toggleOneoff(id) { log.oneoffs[id] = !log.oneoffs[id]; save(); render(); }
+
+// ---------------- Render ----------------
+function render() {
+  const app = document.getElementById("app");
+  const monday = mondayOf(today), week = weekDates(monday);
+  const streaks = Object.fromEntries(METRICS.map(m => [m.key, streakFor(m.key, today)]));
+  let h = "";
+
+  h += `<div class="tabs">
+    <button class="${tab==="hoy"?"on":""}" data-tab="hoy">Hoy</button>
+    <button class="${tab==="semana"?"on":""}" data-tab="semana">Semana</button>
+  </div>`;
+
+  h += `<div class="streaks">` + METRICS.map(m => { const s = streaks[m.key]; return `
+    <div class="streak"><div class="n ${s.streak?"":"zero"}">${s.streak}<small>🔥</small></div>
+    <div class="l">${m.label}</div><div class="r">${s.atRisk?"1 fallo usado":""}</div></div>`; }).join("") + `</div>`;
+
+  if (tab === "hoy") {
+    const selDate = parse(sel), dow = selDate.getDay(), blocks = PLAN[dow] || [], dayLog = log.days[sel] || {};
+    const isToday = sel === iso(today);
+    const markable = blocks.filter(b => b.type !== "fijo");
+    const doneCount = markable.filter(b => dayLog[b.id]).length;
+
+    h += `<div class="days">` + week.map(d => { const dd = parse(d); return `
+      <button data-day="${d}" class="${d===sel?"on":""} ${dd<today?"past":""}" aria-label="${DAY_LONG[dd.getDay()]}">
+        <span>${DAY_SHORT[dd.getDay()]}</span><small>${dd.getDate()}</small></button>`; }).join("") + `</div>`;
+
+    h += `<div class="head"><h1>${isToday?"Hoy":DAY_LONG[dow]}<span>${fmtDate(selDate)}</span></h1>
+      <span class="count">${doneCount} de ${markable.length}</span></div>`;
+
+    h += `<div class="card">` + blocks.map(b => {
+      const st = b.type === "fijo" ? "fijo" : (dayLog[b.id] || "");
+      const mark = st === "done" ? "✓" : st === "min" ? "½" : "";
+      return `<button class="row ${st}" data-block="${b.id}" ${b.type==="fijo"?"disabled":""}>
+        <span class="t">${b.t}</span>
+        <span><span class="n">${esc(b.n)}</span><span class="d">${st==="min"?"Versión mínima":esc(b.d)}</span></span>
+        <span class="chk">${mark}</span></button>`; }).join("") + `</div>
+      <p class="hint">Toca un bloque para marcarlo hecho. Si solo hiciste la versión mínima, tócalo otra vez: cuenta igual.</p>`;
+
+    h += `<h2>Nota del día</h2><div class="card">
+      <input class="note" id="note" maxlength="120" value="${esc(dayLog.nota||"")}" placeholder="Una línea: qué pasó, qué estorbó, qué salió bien"></div>`;
+
+    h += `<h2>Pendientes de una vez</h2><div class="card">` + ONEOFFS.map(o => `
+      <button class="row one ${log.oneoffs[o.id]?"done":""}" data-oneoff="${o.id}">
+        <span class="n">${esc(o.n)}</span><span class="chk">${log.oneoffs[o.id]?"✓":""}</span></button>`).join("") + `</div>`;
+  }
+
+  if (tab === "semana") {
+    const tw = metricsFor(week);
+    h += `<h1>Esta semana</h1><p class="sub">${fmtDate(monday)} al ${fmtDate(addDays(monday,6))}. Solo cuentan estos cuatro números.</p>`;
+    h += `<div class="metrics">` + METRICS.map(m => `
+      <div class="metric"><div class="big ${tw[m.key]>=m.meta?"ok":""}">${tw[m.key]}<span>/${m.of}</span></div>
+      <div class="l">${m.long}</div><div class="m">Meta: ${m.meta}</div></div>`).join("") + `</div>`;
+
+    h += `<div class="card pad" style="margin-top:14px"><b>Cómo funcionan las rachas</b>
+      Cada hábito tiene su racha. Un fallo suelto no la rompe, pero queda marcado como "1 fallo usado": si el siguiente día también falla, la racha vuelve a cero. Hoy sin marcar no cuenta como fallo hasta que pase el día.</div>`;
+    h += `<div class="card pad" style="margin-top:10px"><b>Qué revisar el domingo</b>
+      Si el alemán de martes o jueves falló 3 veces o más en dos semanas, el problema es la hora: se mueve a las 5:00, antes de la tarea. Si el sábado de videojuego falló, casi seguro te levantaste tarde: revisa las noches en cama, no el plan. Lee las notas de la semana antes de decidir.</div>`;
+
+    const noted = week.filter(d => (log.days[d]||{}).nota);
+    h += `<h2>Notas de la semana</h2><div class="card">` + (noted.length ? noted.map(d =>
+      `<div class="noterow"><b>${DAY_SHORT[parse(d).getDay()]}</b><span>${esc(log.days[d].nota)}</span></div>`).join("")
+      : `<div class="empty">Todavía no hay notas esta semana. Se escriben en la pestaña Hoy.</div>`) + `</div>`;
+
+    const past = [];
+    for (let k = 1; k <= 8; k++) { const mon = addDays(monday, -7*k), dates = weekDates(mon); if (dates.some(d => log.days[d])) past.push({mon, dates}); }
+    if (past.length) {
+      h += `<h2>Semanas anteriores</h2><div class="card">
+        <div class="tbl hd"><span>Semana</span><span>Alemán</span><span>Gym</span><span>Juego</span><span>Cama</span></div>` +
+        past.map(({mon,dates}) => { const m = metricsFor(dates); return `<div class="tbl"><span class="w">${fmtDate(mon)}</span>
+          <span class="${m.aleman>=6?"ok":""}">${m.aleman}/7</span><span class="${m.gym>=2?"ok":""}">${m.gym}/2</span>
+          <span class="${m.juego>=1?"ok":""}">${m.juego?"Sí":"No"}</span><span class="${m.cama>=7?"ok":""}">${m.cama}/7</span></div>`; }).join("") + `</div>`;
+    }
+  }
+
+  if (saveErr) h += `<p class="err">No se pudo guardar el último cambio. Vuelve a tocarlo.</p>`;
+  app.innerHTML = h;
+
+  // Eventos
+  app.querySelectorAll("[data-tab]").forEach(el => el.onclick = () => { tab = el.dataset.tab; render(); });
+  app.querySelectorAll("[data-day]").forEach(el => el.onclick = () => { sel = el.dataset.day; render(); });
+  app.querySelectorAll("[data-block]").forEach(el => el.onclick = () => { const b = (PLAN[parse(sel).getDay()]||[]).find(x => x.id === el.dataset.block); if (b) cycle(b); });
+  app.querySelectorAll("[data-oneoff]").forEach(el => el.onclick = () => toggleOneoff(el.dataset.oneoff));
+  const note = document.getElementById("note");
+  if (note) { note.onblur = () => saveNote(note.value); note.onkeydown = e => { if (e.key === "Enter") note.blur(); }; }
+}
+
+load();
+render();
+</script>
+</body>
+</html>
